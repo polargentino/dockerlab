@@ -196,6 +196,32 @@ Mostrar siempre los detalles
 Copiar
 whoami
 root
+### 🔍 Explicación del comando:
+bash
+Copiar
+Editar
+find / -perm -4000 -user root 2>/dev/null
+Este comando busca archivos en todo el sistema (/) que cumplen ciertas condiciones específicas:
+
+Opción	Explicación
+find /	Busca en todo el sistema (desde la raíz /).
+-perm -4000	Busca archivos con permiso SUID (bit 4000 activado).
+-user root	Filtra para mostrar solo archivos propiedad de root.
+2>/dev/null	Oculta los errores de "Permiso denegado" redirigiéndolos a /dev/null.
+🚀 ¿Qué significa "SUID" y por qué es importante?
+El bit SUID (Set User ID) significa que, cuando un usuario ejecuta el archivo, este se ejecuta con los permisos de su propietario (root en este caso).
+Si un binario vulnerable tiene SUID activado, puede permitir escalar privilegios a root.
+
+# 🔹 Los binarios como passwd, su, mount son normales, ya que necesitan permisos elevados para funcionar.
+🔹 El binario env es interesante porque tiene SUID activo, lo que permitió ejecutar:
+
+bash
+Copiar
+Editar
+/usr/bin/env /bin/sh -p
+✔ Esto abrió una shell con privilegios de root.
+
+
 
 
 ### Explicación de: 🔥 1) ¿Qué es la inyección SQL y por qué funciona?
